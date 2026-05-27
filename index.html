@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iHerb サプリメント 比較AI</title>
+<style>
+:root {
+  --green: #5BA829;
+  --green-dark: #3d7a1a;
+  --green-mid: #4d9920;
+  --green-light: #EBF5E0;
+  --orange: #F5A623;
+  --orange-dark: #E07D00;
+  --orange-light: #FFF8E6;
+  --blue: #1976D2;
+  --blue-light: #E3F2FD;
+  --purple: #7B1FA2;
+  --purple-light: #F3E5F5;
+  --pink: #C2185B;
+  --pink-light: #FCE4EC;
+  --red: #D32F2F;
+  --red-light: #FFEBEE;
+  --text: #1A1A1A;
+  --text-sub: #666;
+  --bg: #F2F5F0;
+  --white: #FFFFFF;
+  --border: #DDE8D5;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.07);
+  --shadow: 0 4px 20px rgba(0,0,0,0.09);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: linear-gradient(150deg, #1C3A08 0%, #2d5a12 40%, #5BA829 100%);
+  color: white;
+  padding: 28px 20px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  top: -100px; right: -60px;
+  border-radius: 50%;
+}
+.header-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.13);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 20px; padding: 5px 16px;
+  font-size: 11px; letter-spacing: 1.2px;
+  margin-bottom: 14px; text-transform: uppercase;
+}
+header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.3px; }
+header p { font-size: 13px; opacity: 0.82; line-height: 1.5; }
+
+/* ===== CONTAINER ===== */
+.container { max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
+
+/* ===== CARD ===== */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.card-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--text-sub);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+
+/* ===== API KEY ===== */
+.api-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.api-input-wrap { flex: 1; min-width: 180px; position: relative; }
+.api-input-wrap input {
+  width: 100%; padding: 10px 38px 10px 12px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; font-family: monospace; transition: border-color 0.2s;
+}
+.api-input-wrap input:focus { outline: none; border-color: var(--green); }
+.eye-btn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 15px;
+  color: var(--text-sub); padding: 4px;
+}
+.btn-save {
+  padding: 10px 20px; background: var(--green); color: white;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: background 0.2s;
+}
+.btn-save:hover { background: var(--green-dark); }
+.api-badge {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.api-badge.ok { background: var(--green-light); color: var(--green-dark); }
+.api-badge.ng { background: var(--orange-light); color: var(--orange-dark); }
+
+/* ===== SEARCH FORM ===== */
+.form-label {
+  font-size: 12px; font-weight: 700; color: var(--text-sub);
+  margin-bottom: 7px; display: block; letter-spacing: 0.3px;
+}
+.ingredients-textarea {
+  width: 100%; min-height: 82px; padding: 12px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-size: 14px; font-family: inherit; resize: vertical;
+  transition: border-color 0.2s; line-height: 1.6; margin-bottom: 4px;
+}
+.ingredients-textarea:focus { outline: none; border-color: var(--green); }
+.input-hint { font-size: 11px; color: var(--text-sub); margin-bottom: 14px; }
+
+.chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.chip {
+  padding: 5px 13px; border-radius: 20px; font-size: 12px;
+  border: 1.5px solid var(--green-light); color: var(--green-dark);
+  background: var(--green-light); cursor: pointer;
+  transition: all 0.15s; user-select: none; white-space: nowrap;
+}
+.chip:hover { background: var(--green); color: white; border-color: var(--green); }
+
+.filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-group { flex: 1; min-width: 140px; }
+.filter-select {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-size: 13px; background: white; cursor: pointer; transition: border-color 0.2s;
+}
+.filter-select:focus { outline: none; border-color: var(--green); }
+
+.btn-search {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+  color: white; border: none; border-radius: 11px;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  letter-spacing: 0.3px;
+}
+.btn-search:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(91,168,41,0.38);
+}
+.btn-search:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ===== LOADING ===== */
+.loading-box { display: none; text-align: center; padding: 36px 20px; }
+.loading-box.on { display: block; }
+.spinner {
+  width: 48px; height: 48px; margin: 0 auto 18px;
+  border: 4px solid var(--green-light);
+  border-top-color: var(--green); border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.loading-sub { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; }
+.step-list { display: flex; flex-direction: column; gap: 8px; max-width: 280px; margin: 0 auto; }
+.step-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #bbb; transition: color 0.3s; }
+.step-item.active { color: var(--green-dark); font-weight: 700; }
+.step-item.done { color: var(--green); }
+.step-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #e5e5e5; color: white; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.step-item.active .step-dot { background: var(--green); }
+.step-item.done .step-dot { background: var(--green); }
+
+/* ===== ERROR ===== */
+.error-box {
+  display: none; padding: 20px; background: var(--red-light);
+  border-radius: var(--radius); text-align: center; color: var(--red);
+  margin-bottom: 16px;
+}
+.error-box.on { display: block; }
+.error-box h3 { font-size: 16px; margin-bottom: 8px; }
+.error-box p { font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+.btn-close-err {
+  padding: 8px 22px; background: var(--red); color: white;
+  border: none; border-radius: 8px; cursor: pointer; font-size: 13px;
+}
+
+/* ===== RESULTS ===== */
+.results-box { display: none; }
+.results-box.on { display: block; }
+.results-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+}
+.results-title { font-size: 17px; font-weight: 800; }
+.results-meta { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.btn-reset {
+  padding: 8px 16px; background: var(--border); border: none;
+  border-radius: 8px; cursor: pointer; font-size: 12px; color: var(--text-sub);
+  transition: background 0.15s;
+}
+.btn-reset:hover { background: #cdd8c5; }
+
+/* ===== WINNER BANNER ===== */
+.winner-wrap {
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%);
+  border: 2px solid var(--orange);
+  border-radius: var(--radius); padding: 18px 20px;
+  display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;
+}
+.winner-trophy { font-size: 40px; flex-shrink: 0; }
+.winner-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #E65100; margin-bottom: 4px;
+}
+.winner-name { font-size: 17px; font-weight: 800; color: #BF360C; margin-bottom: 5px; }
+.winner-reason { font-size: 13px; color: #5D4037; line-height: 1.6; }
+
+/* ===== COMPARISON TABLE ===== */
+.table-outer {
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.cmp-table {
+  border-collapse: collapse; width: 100%; min-width: 640px;
+  background: white; font-size: 13px;
+}
+.cmp-table thead {
+  background: linear-gradient(135deg, #1C3A08 0%, #3d7a1a 100%);
+  color: white; position: sticky; top: 0; z-index: 20;
+}
+.cmp-table thead th {
+  padding: 14px 12px; font-size: 13px; font-weight: 700;
+  text-align: center; border-right: 1px solid rgba(255,255,255,0.12);
+  vertical-align: middle;
+}
+.th-row-label {
+  background: #0f2204 !important; text-align: left !important;
+  width: 115px; position: sticky; left: 0; z-index: 30;
+}
+.th-product { min-width: 175px; }
+.th-rank { font-size: 18px; margin-bottom: 2px; }
+
+.cmp-table tbody tr { border-bottom: 1px solid #EEF4E8; transition: background 0.12s; }
+.cmp-table tbody tr:hover { background: #F7FAF4; }
+.cmp-table tbody tr:last-child { border-bottom: none; }
+
+.row-label {
+  padding: 12px 14px; font-size: 11.5px; font-weight: 700;
+  color: var(--text-sub); background: #F5F9F1;
+  position: sticky; left: 0; z-index: 10;
+  border-right: 2px solid var(--green-light);
+  white-space: nowrap; vertical-align: middle;
+}
+.cmp-table tbody td {
+  padding: 12px; text-align: center; vertical-align: top;
+  border-right: 1px solid #EEF4E8;
+}
+.cmp-table tbody td:last-child { border-right: none; }
+
+/* --- Cell types --- */
+.prod-name { font-weight: 700; font-size: 13px; line-height: 1.4; text-align: left; }
+.prod-name a { color: var(--green-dark); text-decoration: none; }
+.prod-name a:hover { text-decoration: underline; }
+.brand-txt { font-size: 11.5px; color: var(--text-sub); margin-top: 3px; }
+.btn-iherb {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; background: var(--green); color: white;
+  border-radius: 8px; font-size: 12px; font-weight: 700;
+  text-decoration: none; transition: background 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+.btn-iherb:hover { background: var(--green-dark); transform: translateY(-1px); }
+
+.price-big { font-size: 18px; font-weight: 800; color: #C62828; }
+.price-jpy { font-size: 12px; color: var(--text-sub); }
+.price-per { font-size: 11px; color: var(--green-dark); font-weight: 600; margin-top: 3px; }
+
+.age-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px;
+  font-weight: 700; margin: 2px;
+}
+.ab-child   { background: var(--blue-light);   color: var(--blue); }
+.ab-adult   { background: var(--green-light);  color: var(--green-dark); }
+.ab-elderly { background: var(--purple-light); color: var(--purple); }
+.ab-pregnant{ background: var(--pink-light);   color: var(--pink); }
+
+.ing-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 8px; padding: 4px 0; border-bottom: 1px dashed #EEF4E8; text-align: left;
+}
+.ing-row:last-child { border-bottom: none; }
+.ing-name { font-size: 12px; flex: 1; }
+.ing-right { text-align: right; }
+.ing-amount { font-size: 12px; font-weight: 700; color: var(--green-dark); display: block; }
+.ing-dv { font-size: 10px; color: var(--text-sub); }
+
+.cert-tag {
+  display: inline-block; padding: 3px 9px; border-radius: 5px;
+  font-size: 10.5px; font-weight: 600; background: var(--green-light);
+  color: var(--green-dark); margin: 2px;
+}
+
+.rating-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.rating-num { font-size: 22px; font-weight: 900; color: var(--text); line-height: 1; }
+.rating-stars { font-size: 15px; color: var(--orange); }
+.rating-cnt { font-size: 10px; color: var(--text-sub); }
+
+.rev-pro { display: flex; gap: 5px; font-size: 12px; color: #2E7D32; margin-bottom: 4px; text-align: left; }
+.rev-con { display: flex; gap: 5px; font-size: 12px; color: #C62828; margin-bottom: 4px; text-align: left; }
+.rev-icon { flex-shrink: 0; margin-top: 1px; }
+.rev-reviewer { font-size: 10.5px; color: var(--text-sub); font-style: italic; margin-top: 6px; text-align: left; }
+
+.score-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.score-num { font-size: 24px; font-weight: 900; color: var(--green-dark); line-height: 1; }
+.score-denom { font-size: 13px; font-weight: 400; color: var(--text-sub); }
+.score-bar { width: 65px; height: 7px; background: #e5e5e5; border-radius: 4px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+.bestfor-cell { font-size: 12px; line-height: 1.6; color: var(--text-sub); text-align: left; }
+
+/* ===== SUMMARY SECTION ===== */
+.summary-card {
+  background: white; border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 16px;
+}
+.summary-title {
+  font-size: 14px; font-weight: 800; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.summary-body { font-size: 13.5px; line-height: 1.9; color: var(--text); }
+
+/* ===== DISCLAIMER ===== */
+.disclaimer {
+  font-size: 11px; color: var(--text-sub); text-align: center;
+  line-height: 1.7; padding: 14px; background: white;
+  border-radius: 10px; margin-top: 20px;
+}
+
+/* ===== API KEY MODAL ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 1000;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.modal-overlay.on { display: flex; }
+.modal-box {
+  background: white; border-radius: 18px; padding: 32px 28px;
+  max-width: 460px; width: 100%; box-shadow: 0 12px 48px rgba(0,0,0,0.22);
+}
+.modal-logo { font-size: 36px; text-align: center; margin-bottom: 10px; }
+.modal-title { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+.modal-sub { font-size: 13px; color: var(--text-sub); text-align: center; line-height: 1.6; margin-bottom: 20px; }
+.modal-step {
+  background: var(--green-light); border-radius: 10px;
+  padding: 14px 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.8;
+}
+.modal-step a { color: var(--green-dark); font-weight: 700; }
+.modal-input-wrap { position: relative; margin-bottom: 12px; }
+.modal-input-wrap input {
+  width: 100%; padding: 12px 42px 12px 14px;
+  border: 2px solid var(--border); border-radius: 10px;
+  font-size: 14px; font-family: monospace;
+  transition: border-color 0.2s;
+}
+.modal-input-wrap input:focus { outline: none; border-color: var(--green); }
+.modal-input-wrap .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+.modal-save-btn {
+  width: 100%; padding: 14px; background: linear-gradient(135deg, var(--green-dark), var(--green));
+  color: white; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 800; cursor: pointer; transition: opacity 0.2s;
+}
+.modal-save-btn:hover { opacity: 0.9; }
+.modal-note { font-size: 11px; color: var(--text-sub); text-align: center; margin-top: 10px; }
+
+/* ===== PROVIDER TABS ===== */
+.provider-tabs { display: flex; gap: 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--border); margin-bottom: 14px; }
+.provider-tab {
+  flex: 1; padding: 10px 8px; text-align: center; cursor: pointer;
+  font-size: 13px; font-weight: 700; border: none; background: #F5F9F1;
+  color: var(--text-sub); transition: all 0.2s; line-height: 1.3;
+}
+.provider-tab.active { background: var(--green); color: white; }
+.provider-tab .tab-badge {
+  display: inline-block; font-size: 10px; padding: 1px 6px;
+  border-radius: 10px; margin-left: 5px; font-weight: 800; vertical-align: middle;
+}
+.provider-tab.active .tab-badge { background: rgba(255,255,255,0.25); color: white; }
+.provider-tab:not(.active) .tab-badge { background: var(--green-light); color: var(--green-dark); }
+.provider-tab.tab-paid:not(.active) .tab-badge { background: #E3F2FD; color: #1565C0; }
+
+.provider-panel { display: none; }
+.provider-panel.on { display: block; }
+
+.free-note {
+  background: var(--green-light); border: 1px solid #B5D98A;
+  border-radius: 8px; padding: 10px 14px; font-size: 12px;
+  color: var(--green-dark); margin-bottom: 12px; line-height: 1.6;
+}
+.free-note strong { font-weight: 800; }
+.paid-note {
+  background: #E3F2FD; border: 1px solid #90CAF9;
+  border-radius: 8px; padding: 10px 14px; font-size: 12px;
+  color: #1565C0; margin-bottom: 12px; line-height: 1.6;
+}
+.paid-note strong { font-weight: 800; }
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  header h1 { font-size: 20px; }
+  .container { padding: 12px 10px 40px; }
+  .filter-row { flex-direction: column; gap: 8px; }
+  .winner-wrap { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-badge">🌿 AI Powered · iHerb Supplement Comparator</div>
+  <h1>iHerb サプリメント 比較 AI</h1>
+  <p>取り入れたい成分・目的を入力するだけで、iHerbの製品を詳細比較</p>
+</header>
+
+<div class="container">
+
+
+  <!-- SEARCH CARD -->
+  <div class="card">
+    <div class="card-title">🔍 取り入れたい成分・機能・目的</div>
+
+    <label class="form-label">成分名、機能、目的を入力（複数可）</label>
+    <textarea id="queryInput" class="ingredients-textarea"
+      placeholder="例：ビタミンD3 + K2&#10;例：子供用マルチビタミン&#10;例：マグネシウム グリシネート 睡眠改善&#10;例：オメガ3 フィッシュオイル DHA EPA"
+    ></textarea>
+    <p class="input-hint">※ 複数の成分は改行またはカンマで区切ってください</p>
+
+    <div class="card-title">💡 よく検索される成分・目的</div>
+    <div class="chips-wrap">
+      <span class="chip" onclick="setChip('ビタミンD3 + K2 骨の健康')">ビタミンD3 + K2</span>
+      <span class="chip" onclick="setChip('子供用マルチビタミン グミ')">子供用マルチビタミン</span>
+      <span class="chip" onclick="setChip('オメガ3 フィッシュオイル DHA EPA')">オメガ3 / DHA・EPA</span>
+      <span class="chip" onclick="setChip('マグネシウム グリシネート 睡眠 リラックス')">マグネシウム</span>
+      <span class="chip" onclick="setChip('亜鉛 免疫 男性 テストステロン')">亜鉛</span>
+      <span class="chip" onclick="setChip('プロバイオティクス 腸内環境 100億菌')">プロバイオティクス</span>
+      <span class="chip" onclick="setChip('コラーゲンペプチド 美肌 関節')">コラーゲン</span>
+      <span class="chip" onclick="setChip('鉄分 妊婦 妊娠 貧血 女性')">鉄分（妊婦向け）</span>
+      <span class="chip" onclick="setChip('ビタミンC 高用量 免疫力 風邪予防')">ビタミンC</span>
+      <span class="chip" onclick="setChip('ビタミンB群 B12 疲労回復 エネルギー')">ビタミンB群</span>
+      <span class="chip" onclick="setChip('メラトニン 睡眠 時差ぼけ')">メラトニン</span>
+      <span class="chip" onclick="setChip('CoQ10 コエンザイムQ10 心臓 抗酸化')">CoQ10</span>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-group">
+        <label class="form-label">対象年齢・対象者</label>
+        <select class="filter-select" id="ageFilter">
+          <option value="all">指定なし（すべて）</option>
+          <option value="child">子供向け（0〜12歳）</option>
+          <option value="teen">ティーン向け（13〜17歳）</option>
+          <option value="adult">大人向け（18歳以上）</option>
+          <option value="elderly">高齢者向け（65歳以上）</option>
+          <option value="pregnant">妊婦・授乳中</option>
+          <option value="athlete">アスリート・運動愛好者</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="form-label">比較製品数</label>
+        <select class="filter-select" id="countFilter">
+          <option value="3">3製品</option>
+          <option value="4">4製品</option>
+          <option value="5" selected>5製品</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="form-label">価格帯</label>
+        <select class="filter-select" id="priceFilter">
+          <option value="all">指定なし</option>
+          <option value="budget">コスパ重視（¥3,000以下）</option>
+          <option value="mid">ミドル（¥3,000〜¥7,500）</option>
+          <option value="premium">プレミアム（¥7,500以上）</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-search" id="searchBtn" onclick="doSearch()">
+      <span>🔍</span>
+      <span>iHerb でサプリメントを比較する</span>
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-box card" id="loadingBox">
+    <div class="spinner"></div>
+    <div class="loading-title">AIが iHerb を検索・分析中...</div>
+    <div class="loading-sub">実際の製品ページにアクセスして情報を取得しています</div>
+    <div class="step-list">
+      <div class="step-item" id="s1"><div class="step-dot">1</div><span>iHerbで製品を検索中...</span></div>
+      <div class="step-item" id="s2"><div class="step-dot">2</div><span>成分・含有量を取得中...</span></div>
+      <div class="step-item" id="s3"><div class="step-dot">3</div><span>ユーザーレビューを分析中...</span></div>
+      <div class="step-item" id="s4"><div class="step-dot">4</div><span>比較表を生成中...</span></div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-box" id="errorBox">
+    <h3>⚠️ エラーが発生しました</h3>
+    <p id="errorMsg">エラー内容がここに表示されます</p>
+    <button class="btn-close-err" onclick="closeError()">閉じる</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-box" id="resultsBox">
+    <div class="results-top">
+      <div>
+        <div class="results-title" id="resTitle">比較結果</div>
+        <div class="results-meta" id="resMeta"></div>
+      </div>
+      <button class="btn-reset" onclick="resetResults()">✕ クリア</button>
+    </div>
+
+    <!-- Winner -->
+    <div class="winner-wrap" id="winnerWrap" style="display:none">
+      <div class="winner-trophy">🏆</div>
+      <div>
+        <div class="winner-label">総合おすすめ</div>
+        <div class="winner-name" id="winnerName"></div>
+        <div class="winner-reason" id="winnerReason"></div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-outer">
+      <table class="cmp-table">
+        <thead id="tHead"></thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-card" id="summaryCard" style="display:none">
+      <div class="summary-title">📋 AI 比較まとめ</div>
+      <div class="summary-body" id="summaryBody"></div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    ※ このアプリは Google Gemini AI が jp.iherb.com（iHerb日本語版）の製品情報を分析します。<br>
+    価格・在庫・成分表示は変更される場合があります。購入前に必ず iHerb 公式ページでご確認ください。<br>
+    本サービスは iHerb, Inc. とは無関係の独立したツールです。
+  </div>
+
+</div><!-- /container -->
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay" id="keyModal">
+  <div class="modal-box">
+    <div class="modal-logo">🌿</div>
+    <div class="modal-title">iHerb サプリメント比較 AI</div>
+    <div class="modal-sub">ご利用には Google Gemini の無料APIキーが必要です。<br>取得は1分ほどで完了します。</div>
+    <div class="modal-step">
+      <strong>① </strong><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> にアクセス（Googleアカウントでログイン）<br>
+      <strong>② </strong>「Create API key」をクリック<br>
+      <strong>③ </strong>「AIza...」で始まるキーをコピーして下に貼り付け
+    </div>
+    <div class="modal-input-wrap">
+      <input type="password" id="modalKeyInput" placeholder="AIza..." autocomplete="off">
+      <button class="eye-btn" onclick="toggleModalKey()">👁</button>
+    </div>
+    <button class="modal-save-btn" onclick="saveModalKey()">✅ 保存してはじめる</button>
+    <p class="modal-note">🔒 キーはこのブラウザにのみ保存されます。外部送信は一切しません。</p>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE & INIT
+// ─────────────────────────────────────────────
+let geminiKey = '';
+let stepTimer = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const gk = localStorage.getItem('ih_gemini_key');
+  if (gk) {
+    geminiKey = gk;
+  } else {
+    document.getElementById('keyModal').classList.add('on');
+  }
+});
+
+function toggleModalKey() {
+  const el = document.getElementById('modalKeyInput');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function saveModalKey() {
+  const k = document.getElementById('modalKeyInput').value.trim();
+  if (!k.startsWith('AIza')) {
+    alert('APIキーは "AIza" で始まる必要があります。正しいキーをご確認ください。');
+    return;
+  }
+  geminiKey = k;
+  localStorage.setItem('ih_gemini_key', k);
+  document.getElementById('keyModal').classList.remove('on');
+}
+
+// ─────────────────────────────────────────────
+// CHIPS
+// ─────────────────────────────────────────────
+function setChip(text) {
+  const el = document.getElementById('queryInput');
+  el.value = text;
+  el.focus();
+}
+
+// ─────────────────────────────────────────────
+// MAIN SEARCH
+// ─────────────────────────────────────────────
+async function doSearch() {
+  const query = document.getElementById('queryInput').value.trim();
+  const age   = document.getElementById('ageFilter').value;
+  const count = parseInt(document.getElementById('countFilter').value);
+  const price = document.getElementById('priceFilter').value;
+
+  if (!geminiKey) {
+    showError('Google Gemini の APIキーを設定してください。aistudio.google.com/apikey から無料で取得できます。'); return;
+  }
+  if (!query) { showError('成分・目的を入力してください'); return; }
+
+  setLoading(true);
+  resetResults();
+  closeError();
+
+  const ageMap = {
+    all: '', child: '子供（0〜12歳）向けを優先', teen: 'ティーン（13〜17歳）向けを優先',
+    adult: '大人（18歳以上）向けを優先', elderly: '高齢者（65歳以上）向けを優先',
+    pregnant: '妊婦・授乳中の方向けを優先', athlete: 'アスリート・運動愛好者向けを優先'
+  };
+  const priceMap = { all: '', budget: '＊3,000円以下のコスパ重視製品を優先', mid: '＊3,000〜7,500円のミドルレンジを優先', premium: '＊7,500円以上のプレミアム製品を優先' };
+
+  const ageCtx   = age   !== 'all' ? `\n対象: ${ageMap[age]}。` : '';
+  const priceCtx = price !== 'all' ? `\n価格: ${priceMap[price]}。` : '';
+
+  try {
+    startStepAnimation();
+    const data = await geminiSearch(query, count, ageCtx, priceCtx);
+    renderAll(data, query, count);
+  } catch (err) {
+    showError(err.message || '不明なエラーが発生しました。APIキーをご確認ください。');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function buildSystemPrompt(count) {
+  return `あなたはiHerb日本語版（jp.iherb.com）の栄養士・サプリメント専門家です。
+ユーザーが求める成分・目的のサプリメントをjp.iherb.comで調べ、${count}製品を選んで詳細比較します。
+
+【重要なルール】
+1. product_urlは必ず https://jp.iherb.com/pr/... の形式にすること（例: https://jp.iherb.com/pr/now-foods-vitamin-d-3/11230）
+2. 製品名・ブランド名はjp.iherb.comの日本語表記を優先すること
+3. 成分含有量は「1回の摂取量あたり（per serving）」の正確な数値を記載すること
+4. レビューは日本語レビューを優先して読み、良い点・悪い点を具体的に記述すること
+5. 評価・レビュー数も正確に記載すること
+6. 全ての文章・説明は必ず日本語で記述すること
+7. price_jpyはjp.iherb.comでの日本円価格（整数）を記載すること`;
+}
+
+function buildUserMessage(query, count, ageCtx, priceCtx) {
+  return `以下の条件でjp.iherb.comのサプリメントを調べ、${count}製品を比較してください。
+
+【検索条件】
+成分・目的: ${query}${ageCtx}${priceCtx}
+
+【手順】
+1. jp.iherb.com で「${query}」に関連する人気製品を${count}つ選ぶ
+2. 各製品の成分表（Supplement Facts）の正確な含有量を記載する
+3. 対象年齢・認証マークを確認する
+4. 日本語レビューを優先してユーザーレビューの良い点・悪い点をまとめる
+5. product_urlは必ず https://jp.iherb.com/pr/... の形式にする（例: https://jp.iherb.com/pr/now-foods-vitamin-d-3/11230）
+6. price_jpyにjp.iherb.comでの日本円価格（整数）を記載する
+7. 全ての説明・レビュー・まとめは日本語で記述する`;
+}
+
+// ─────────────────────────────────────────────
+// GOOGLE GEMINI API (構造化出力・JSON保証)
+// ─────────────────────────────────────────────
+async function geminiSearch(query, count, ageCtx, priceCtx) {
+  const model = 'gemini-2.5-flash';
+  const url   = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+
+  const sysPrompt  = buildSystemPrompt(count);
+  const userMsg    = buildUserMessage(query, count, ageCtx, priceCtx);
+  const fullPrompt = sysPrompt + '\n\n---\n\n' + userMsg;
+
+  const ingredientSchema = {
+    type: 'object',
+    properties: {
+      name:               { type: 'string' },
+      amount_per_serving: { type: 'string' },
+      daily_value_pct:    { type: 'string' }
+    }
+  };
+
+  const productSchema = {
+    type: 'object',
+    properties: {
+      name:                  { type: 'string' },
+      full_name:             { type: 'string' },
+      brand:                 { type: 'string' },
+      product_url:           { type: 'string' },
+      price_jpy:             { type: 'number' },
+      serving_size:          { type: 'string' },
+      servings_per_container:{ type: 'number' },
+      key_ingredients:       { type: 'array', items: ingredientSchema },
+      target_age:            { type: 'array', items: { type: 'string' } },
+      certifications:        { type: 'array', items: { type: 'string' } },
+      rating:                { type: 'number' },
+      review_count:          { type: 'number' },
+      review_highlights: {
+        type: 'object',
+        properties: {
+          positive:          { type: 'array', items: { type: 'string' } },
+          negative:          { type: 'array', items: { type: 'string' } },
+          typical_reviewer:  { type: 'string' }
+        }
+      },
+      pros:                  { type: 'array', items: { type: 'string' } },
+      cons:                  { type: 'array', items: { type: 'string' } },
+      recommendation_score:  { type: 'number' },
+      value_score:           { type: 'number' },
+      best_for:              { type: 'string' }
+    }
+  };
+
+  const responseSchema = {
+    type: 'object',
+    properties: {
+      search_query:       { type: 'string' },
+      products:           { type: 'array', items: productSchema },
+      comparison_summary: { type: 'string' },
+      winner:             { type: 'string' },
+      winner_reason:      { type: 'string' }
+    }
+  };
+
+  const body = {
+    contents: [{ parts: [{ text: fullPrompt }] }],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 32768,
+      responseMimeType: 'application/json',
+      responseSchema
+    }
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    const msg = data.error?.message || '';
+    if (res.status === 400 && msg.includes('API_KEY')) throw new Error('Gemini APIキーが無効です。aistudio.google.com/apikey で確認してください。');
+    if (res.status === 429) throw new Error('Gemini APIのレート制限に達しました。1分ほど待ってから再試行してください。');
+    throw new Error(`Gemini API エラー (${res.status}): ${msg}`);
+  }
+
+  const finishReason = data.candidates?.[0]?.finishReason;
+  if (finishReason === 'MAX_TOKENS') throw new Error('レスポンスが長すぎて途中で切れました。比較製品数を減らして再試行してください。');
+
+  const parts = data.candidates?.[0]?.content?.parts ?? [];
+  const text  = parts.filter(p => p.text && !p.thought).map(p => p.text).join('');
+  if (!text) throw new Error('Gemini からのレスポンスが空です。再度お試しください。');
+
+  try { return JSON.parse(text); } catch { return parseJson(text); }
+}
+
+// ─────────────────────────────────────────────
+// CLAUDE API WITH TOOL LOOP
+// ─────────────────────────────────────────────
+async function claudeWebSearch(systemPrompt, userMsg) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': claudeKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-beta': 'web-search-2025-03-05'
+  };
+
+  const tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 20 }];
+  let messages = [{ role: 'user', content: userMsg }];
+  const MAX_ITER = 15;
+
+  for (let i = 0; i < MAX_ITER; i++) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: 'claude-opus-4-7',
+        max_tokens: 8000,
+        system: systemPrompt,
+        tools,
+        messages
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const errMsg = data.error?.message || '';
+      if (res.status === 401) throw new Error('APIキーが無効です。正しいキーを設定してください。');
+      if (res.status === 429) throw new Error('APIのレート制限に達しました。しばらく待ってから再試行してください。');
+      throw new Error(`API エラー (${res.status}): ${errMsg}`);
+    }
+
+    if (data.stop_reason === 'end_turn') {
+      const textBlock = data.content.find(b => b.type === 'text');
+      if (!textBlock) throw new Error('テキストレスポンスが取得できませんでした');
+      return parseJson(textBlock.text);
+    }
+
+    if (data.stop_reason === 'tool_use') {
+      messages.push({ role: 'assistant', content: data.content });
+      const toolResults = data.content
+        .filter(b => b.type === 'tool_use')
+        .map(b => ({ type: 'tool_result', tool_use_id: b.id, content: '' }));
+      if (toolResults.length === 0) break;
+      messages.push({ role: 'user', content: toolResults });
+      continue;
+    }
+
+    // Unexpected stop
+    const txt = data.content?.find(b => b.type === 'text');
+    if (txt) return parseJson(txt.text);
+    throw new Error(`予期しない応答形式: stop_reason="${data.stop_reason}"`);
+  }
+
+  throw new Error('API の呼び出し回数が上限に達しました');
+}
+
+function fixLiteralNewlinesInJson(s) {
+  let result = '';
+  let inStr = false, escape = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (escape) { escape = false; result += c; continue; }
+    if (c === '\\' && inStr) { escape = true; result += c; continue; }
+    if (c === '"') { inStr = !inStr; result += c; continue; }
+    if (inStr && (c === '\n' || c === '\r')) continue; // 文字列内の改行を除去
+    result += c;
+  }
+  return result;
+}
+
+function extractFirstJsonObject(text) {
+  const start = text.indexOf('{');
+  if (start === -1) return null;
+  let depth = 0, inStr = false, escape = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (escape) { escape = false; continue; }
+    if (c === '\\' && inStr) { escape = true; continue; }
+    if (c === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (c === '{') depth++;
+    if (c === '}' && --depth === 0) return text.slice(start, i + 1);
+  }
+  return null;
+}
+
+function parseJson(raw) {
+  const text = raw.trim();
+
+  // Try 1: Direct parse
+  try { return JSON.parse(text); } catch {}
+
+  // Try 2: Remove leading ` json or `json prefix (single-backtick code fence)
+  const stripped = text.replace(/^`\s*json\s*/i, '').trim();
+  try { return JSON.parse(stripped); } catch {}
+
+  // Try 3: Extract from ```json ... ``` code block
+  const jsonBlock = text.match(/```json\s*([\s\S]*?)```/);
+  if (jsonBlock) {
+    try { return JSON.parse(jsonBlock[1].trim()); } catch {}
+  }
+
+  // Try 4: Extract from ``` ... ``` code block
+  const codeBlock = text.match(/```\s*([\s\S]*?)```/);
+  if (codeBlock) {
+    try { return JSON.parse(codeBlock[1].trim()); } catch {}
+  }
+
+  // Try 5: Brace-counting — correctly finds the first complete JSON object
+  const extracted = extractFirstJsonObject(text);
+  if (extracted) {
+    try { return JSON.parse(extracted); } catch {}
+    // Try 6: Fix literal newlines inside strings, then parse
+    const cleaned = fixLiteralNewlinesInJson(extracted);
+    try { return JSON.parse(cleaned); } catch {}
+    try {
+      const fixed = cleaned.replace(/,\s*([}\]])/g, '$1').replace(/([{\[,])\s*,/g, '$1');
+      return JSON.parse(fixed);
+    } catch {}
+  }
+
+  throw new Error('AIからのJSONレスポンスを解析できませんでした。もう一度お試しください。');
+}
+
+// ─────────────────────────────────────────────
+// LOADING & STEPS
+// ─────────────────────────────────────────────
+function setLoading(on) {
+  const box = document.getElementById('loadingBox');
+  const btn = document.getElementById('searchBtn');
+  box.className = 'loading-box card' + (on ? ' on' : '');
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<span>⏳</span><span>検索・分析中...</span>'
+    : '<span>🔍</span><span>iHerb でサプリメントを比較する</span>';
+  if (!on && stepTimer) { clearInterval(stepTimer); stepTimer = null; }
+}
+
+function startStepAnimation() {
+  const ids = ['s1','s2','s3','s4'];
+  let cur = 0;
+  ids.forEach(id => { document.getElementById(id).className = 'step-item'; });
+  document.getElementById(ids[0]).className = 'step-item active';
+
+  stepTimer = setInterval(() => {
+    if (cur < ids.length - 1) {
+      const el = document.getElementById(ids[cur]);
+      el.className = 'step-item done';
+      el.querySelector('.step-dot').textContent = '✓';
+      cur++;
+      document.getElementById(ids[cur]).className = 'step-item active';
+    }
+  }, 3500);
+}
+
+// ─────────────────────────────────────────────
+// ERROR
+// ─────────────────────────────────────────────
+function showError(msg) {
+  document.getElementById('errorMsg').textContent = msg;
+  document.getElementById('errorBox').className = 'error-box on';
+  document.getElementById('errorBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function closeError() { document.getElementById('errorBox').className = 'error-box'; }
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function renderAll(data, query, count) {
+  if (!data?.products?.length) { showError('比較データを取得できませんでした。再度お試しください。'); return; }
+
+  const box = document.getElementById('resultsBox');
+  box.className = 'results-box on';
+  document.getElementById('resTitle').textContent = `「${query}」の比較結果`;
+  document.getElementById('resMeta').textContent =
+    `${data.products.length}製品を比較 ｜ ${new Date().toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric' })}`;
+
+  // Winner
+  if (data.winner && data.winner_reason) {
+    document.getElementById('winnerName').textContent   = data.winner;
+    document.getElementById('winnerReason').textContent = data.winner_reason;
+    document.getElementById('winnerWrap').style.display = 'flex';
+  }
+
+  renderTable(data.products);
+
+  if (data.comparison_summary) {
+    document.getElementById('summaryBody').textContent = data.comparison_summary;
+    document.getElementById('summaryCard').style.display = 'block';
+  }
+
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Ranking icons
+const RANKS = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+
+function renderTable(prods) {
+  // HEAD
+  const headCells = prods.map((p, i) => {
+    const href = productUrl(p);
+    const btnHtml = href
+      ? `<a class="btn-iherb" href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="margin-top:8px;font-size:11px;padding:5px 10px;">🛒 iHerbで見る</a>`
+      : '';
+    return `
+    <th class="th-product">
+      <div class="th-rank">${RANKS[i] || (i+1)}</div>
+      <div style="font-weight:800;font-size:13px;line-height:1.3;">${esc(p.name || p.brand)}</div>
+      <div style="font-size:11px;opacity:0.75;margin-top:2px;">${esc(p.brand)}</div>
+      ${btnHtml}
+    </th>`;
+  }).join('');
+  document.getElementById('tHead').innerHTML = `<tr><th class="th-row-label">項目</th>${headCells}</tr>`;
+
+  // ROW DEFINITIONS
+  const rows = [
+    {
+      label: '📦 製品名',
+      cells: prods.map(p => {
+        return `<td><div class="prod-name">${esc(p.full_name || p.name)}</div><div class="brand-txt">${esc(p.brand)}</div></td>`;
+      })
+    },
+    {
+      label: '💰 参考価格',
+      cells: prods.map(p => {
+        const href = productUrl(p);
+        const priceHtml = p.price_jpy
+          ? `<div class="price-big">¥${Math.round(p.price_jpy).toLocaleString()}</div>`
+          : '<div style="color:#ccc;font-size:13px;">価格情報なし</div>';
+        return `<td style="text-align:center;">
+          ${priceHtml}
+          <div style="font-size:9px;color:var(--text-sub);margin-top:3px;">※AI調査時点の参考価格</div>
+          ${href ? `<a class="btn-iherb" href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="margin-top:6px;font-size:11px;padding:5px 12px;">🛒 iHerbで確認</a>` : ''}
+          <div style="font-size:9px;color:var(--text-sub);margin-top:3px;">最新価格はiHerbでご確認ください</div>
+        </td>`;
+      })
+    },
+    {
+      label: '📏 摂取量',
+      cells: prods.map(p => `<td>
+        <div style="font-size:13px;font-weight:600;">${esc(p.serving_size || '—')}</div>
+        ${p.servings_per_container ? `<div style="font-size:11px;color:var(--text-sub);">${p.servings_per_container}回分</div>` : ''}
+      </td>`)
+    },
+    {
+      label: '👤 対象年齢',
+      cells: prods.map(p => {
+        const ages = Array.isArray(p.target_age) ? p.target_age : (p.target_age ? [p.target_age] : ['adult']);
+        const badgeMap = {
+          child: ['🧒', '子供', 'ab-child'],
+          teen:  ['🧑', 'ティーン', 'ab-adult'],
+          adult: ['👤', '大人', 'ab-adult'],
+          elderly:['👴', '高齢者', 'ab-elderly'],
+          pregnant:['🤰', '妊婦', 'ab-pregnant'],
+          athlete: ['🏃', 'アスリート', 'ab-adult'],
+        };
+        const badges = ages.map(a => {
+          const b = badgeMap[a] || ['👤', a, 'ab-adult'];
+          return `<span class="age-badge ${b[2]}">${b[0]} ${b[1]}</span>`;
+        }).join('');
+        return `<td>${badges}</td>`;
+      })
+    },
+    {
+      label: '🧪 主要成分・1回分含有量',
+      cells: prods.map(p => {
+        if (!Array.isArray(p.key_ingredients) || !p.key_ingredients.length) return '<td>—</td>';
+        const servingNote = p.serving_size ? `<div style="font-size:10px;color:var(--text-sub);margin-bottom:6px;">1回分: ${esc(p.serving_size)}</div>` : '';
+        const rows = p.key_ingredients.map(ing => `
+          <div class="ing-row">
+            <span class="ing-name">${esc(ing.name)}</span>
+            <div class="ing-right">
+              <span class="ing-amount">${esc(ing.amount_per_serving || '—')}</span>
+              ${ing.daily_value_pct ? `<span class="ing-dv">DV: ${esc(ing.daily_value_pct)}</span>` : ''}
+            </div>
+          </div>`).join('');
+        return `<td style="text-align:left;min-width:210px;">${servingNote}${rows}</td>`;
+      })
+    },
+    {
+      label: '✅ 認証・品質',
+      cells: prods.map(p => {
+        const certs = Array.isArray(p.certifications) ? p.certifications : [];
+        return `<td>${certs.length ? certs.map(c => `<span class="cert-tag">${esc(c)}</span>`).join('') : '<span style="color:#ccc;">—</span>'}</td>`;
+      })
+    },
+    {
+      label: '⭐ 評価',
+      cells: prods.map(p => {
+        if (p.rating == null) return '<td>—</td>';
+        const n = parseFloat(p.rating);
+        const filled = Math.round(n);
+        const stars = '★'.repeat(Math.min(5, filled)) + '☆'.repeat(Math.max(0, 5 - filled));
+        return `<td>
+          <div class="rating-wrap">
+            <div class="rating-num">${n.toFixed(1)}</div>
+            <div class="rating-stars">${stars}</div>
+            <div class="rating-cnt">${p.review_count ? p.review_count.toLocaleString() + ' 件' : ''}</div>
+          </div>
+        </td>`;
+      })
+    },
+    {
+      label: '💬 レビューまとめ',
+      cells: prods.map(p => {
+        const rh = p.review_highlights || {};
+        const pos = Array.isArray(rh.positive) ? rh.positive : [];
+        const neg = Array.isArray(rh.negative) ? rh.negative : [];
+        const html = [
+          ...pos.map(r => `<div class="rev-pro"><span class="rev-icon">✅</span><span>${esc(r)}</span></div>`),
+          ...neg.map(r => `<div class="rev-con"><span class="rev-icon">⚠️</span><span>${esc(r)}</span></div>`)
+        ].join('');
+        const reviewer = rh.typical_reviewer
+          ? `<div class="rev-reviewer">📋 ${esc(rh.typical_reviewer)}</div>` : '';
+        return `<td style="text-align:left;min-width:190px;">${html}${reviewer}</td>`;
+      })
+    },
+    {
+      label: '👍 メリット',
+      cells: prods.map(p => {
+        const pros = Array.isArray(p.pros) ? p.pros : [];
+        return `<td style="text-align:left;">${pros.map(r => `<div class="rev-pro"><span class="rev-icon">✅</span><span>${esc(r)}</span></div>`).join('')}</td>`;
+      })
+    },
+    {
+      label: '👎 デメリット',
+      cells: prods.map(p => {
+        const cons = Array.isArray(p.cons) ? p.cons : [];
+        return `<td style="text-align:left;">${cons.map(r => `<div class="rev-con"><span class="rev-icon">⚠️</span><span>${esc(r)}</span></div>`).join('')}</td>`;
+      })
+    },
+    {
+      label: '🎯 おすすめ度',
+      cells: prods.map(p => {
+        const sc = p.recommendation_score || 0;
+        const pct = Math.min(100, sc * 10);
+        const col = sc >= 8 ? 'var(--green)' : sc >= 6 ? 'var(--orange)' : 'var(--red)';
+        return `<td>
+          <div class="score-wrap">
+            <div class="score-num">${sc}<span class="score-denom">/10</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${col};"></div></div>
+          </div>
+        </td>`;
+      })
+    },
+    {
+      label: '💹 コスパ評価',
+      cells: prods.map(p => {
+        const sc  = p.value_score || 0;
+        const pct = Math.min(100, sc * 10);
+        const col = sc >= 8 ? 'var(--green)' : sc >= 6 ? 'var(--orange)' : 'var(--red)';
+        return `<td>
+          <div class="score-wrap">
+            <div class="score-num">${sc}<span class="score-denom">/10</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${col};"></div></div>
+          </div>
+        </td>`;
+      })
+    },
+    {
+      label: '🙋 こんな方に',
+      cells: prods.map(p => `<td class="bestfor-cell">${esc(p.best_for || '—')}</td>`)
+    }
+  ];
+
+  document.getElementById('tBody').innerHTML = rows.map(row =>
+    `<tr><td class="row-label">${row.label}</td>${row.cells.join('')}</tr>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+// RESET
+// ─────────────────────────────────────────────
+function resetResults() {
+  const box = document.getElementById('resultsBox');
+  box.className = 'results-box';
+  document.getElementById('winnerWrap').style.display = 'none';
+  document.getElementById('summaryCard').style.display = 'none';
+  document.getElementById('tHead').innerHTML = '';
+  document.getElementById('tBody').innerHTML = '';
+}
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// jp.iherb.com/pr/...のURLが有効なら使用、それ以外は検索URLにフォールバック
+function productUrl(p) {
+  if (p.product_url && typeof p.product_url === 'string') {
+    const u = p.product_url.trim();
+    if (u.startsWith('https://jp.iherb.com/pr/') || u.startsWith('https://www.iherb.com/pr/')) {
+      return u;
+    }
+  }
+  const q = [p.brand, p.full_name || p.name].filter(Boolean).join(' ');
+  if (!q.trim()) return null;
+  return 'https://jp.iherb.com/search?kw=' + encodeURIComponent(q.trim());
+}
+</script>
+</body>
+</html>
