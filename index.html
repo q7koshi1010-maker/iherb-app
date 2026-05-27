@@ -675,12 +675,13 @@ function buildSystemPrompt(count) {
 
 【重要なルール】
 1. product_urlは必ず https://jp.iherb.com/pr/... の形式にすること（例: https://jp.iherb.com/pr/now-foods-vitamin-d-3/11230）
-2. 製品名・ブランド名はjp.iherb.comの日本語表記を優先すること
-3. 成分含有量は「1回の摂取量あたり（per serving）」の正確な数値を記載すること
-4. レビューは日本語レビューを優先して読み、良い点・悪い点を具体的に記述すること
-5. 評価・レビュー数も正確に記載すること
-6. 全ての文章・説明は必ず日本語で記述すること
-7. price_jpyはjp.iherb.comでの日本円価格（整数）を記載すること`;
+2. full_nameはjp.iherb.comの製品ページに表示される正確な日本語製品名をそのまま使用すること（英語表記もそのまま）
+3. brandはjp.iherb.comに表示されるブランド名をそのまま使用すること
+4. 成分含有量は「1回の摂取量あたり（per serving）」の正確な数値を記載すること
+5. レビューは日本語レビューを優先して読み、良い点・悪い点を具体的に記述すること
+6. 評価・レビュー数も正確に記載すること
+7. 全ての文章・説明は必ず日本語で記述すること
+8. price_jpyはjp.iherb.comに表示されている日本円価格（整数）を正確に記載すること`;
 }
 
 function buildUserMessage(query, count, ageCtx, priceCtx) {
@@ -691,12 +692,13 @@ function buildUserMessage(query, count, ageCtx, priceCtx) {
 
 【手順】
 1. jp.iherb.com で「${query}」に関連する人気製品を${count}つ選ぶ
-2. 各製品の成分表（Supplement Facts）の正確な含有量を記載する
-3. 対象年齢・認証マークを確認する
-4. 日本語レビューを優先してユーザーレビューの良い点・悪い点をまとめる
-5. product_urlは必ず https://jp.iherb.com/pr/... の形式にする（例: https://jp.iherb.com/pr/now-foods-vitamin-d-3/11230）
-6. price_jpyにjp.iherb.comでの日本円価格（整数）を記載する
-7. 全ての説明・レビュー・まとめは日本語で記述する`;
+2. full_nameはjp.iherb.comの製品ページに表示される正確な製品名（例: "Now Foods, ビタミンD-3, 2,000 IU, 240ソフトジェル"）をそのまま記載する
+3. 各製品の成分表（Supplement Facts）の正確な含有量を記載する
+4. 対象年齢・認証マークを確認する
+5. 日本語レビューを優先してユーザーレビューの良い点・悪い点をまとめる
+6. product_urlは必ず https://jp.iherb.com/pr/... の形式にする（例: https://jp.iherb.com/pr/now-foods-vitamin-d-3/11230）
+7. price_jpyにjp.iherb.comに表示されている日本円価格（整数・税込み表示価格）を記載する
+8. 全ての説明・レビュー・まとめは日本語で記述する`;
 }
 
 // ─────────────────────────────────────────────
@@ -1006,11 +1008,15 @@ function renderTable(prods) {
     const btnHtml = href
       ? `<a class="btn-iherb" href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="margin-top:8px;font-size:11px;padding:5px 10px;">🛒 iHerbで見る</a>`
       : '';
+    const priceLabel = p.price_jpy
+      ? `<div style="font-size:14px;font-weight:800;color:#C62828;margin-top:6px;">¥${Math.round(p.price_jpy).toLocaleString()}</div><div style="font-size:9px;opacity:0.7;">参考価格</div>`
+      : '';
     return `
     <th class="th-product">
       <div class="th-rank">${RANKS[i] || (i+1)}</div>
-      <div style="font-weight:800;font-size:13px;line-height:1.3;">${esc(p.name || p.brand)}</div>
+      <div style="font-weight:800;font-size:13px;line-height:1.3;">${esc(p.full_name || p.name || p.brand)}</div>
       <div style="font-size:11px;opacity:0.75;margin-top:2px;">${esc(p.brand)}</div>
+      ${priceLabel}
       ${btnHtml}
     </th>`;
   }).join('');
