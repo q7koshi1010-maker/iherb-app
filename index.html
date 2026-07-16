@@ -1197,29 +1197,57 @@ function esc(s) {
 
 // ─────────────────────────────────────────────
 // REAL PRICE SCRAPING (Chrome拡張CORSバイパス使用)
-// 戦略: 検索結果1番目のURLで正確な製品ページとリアル価格を取得
+// 戦略: 検索結果の候補一覧を「ブランド名＋数字(含有量/数量)」で照合し、
+//       確信が持てた商品だけURL・価格を採用する（不一致なら検索リンクに退避）
+// 注意: iHerbのURLは末尾の数字IDだけで商品が決まるため、AI生成URLは信用しない
 // ─────────────────────────────────────────────
 async function fetchIherbProductInfo(brand, name) {
   const q = [brand, name].filter(Boolean).join(' ');
-  if (!q.trim()) return { price: null, url: null };
-  const searchUrl = 'https://jp.iherb.com/search?kw=' + encodeURIComponent(q.trim());
+  if (!q.trim()) return { price: null, url: null, title: null };
   try {
-    // Step1: 検索して正確な製品URLを取得
-    const searchRes = await fetch(searchUrl, { mode: 'cors' });
-    if (!searchRes.ok) return { price: null, url: null };
-    const searchHtml = await searchRes.text();
-    const prodUrl = searchHtml.match(/href="(https:\/\/jp\.iherb\.com\/pr\/[^"?#]+)"/)?.[1];
-    if (!prodUrl) return { price: null, url: null };
+    // Step1: 検索結果から候補(URL+日本語商品名)を抽出
+    const searchRes = await fetch('https://jp.iherb.com/search?kw=' + encodeURIComponent(q.trim()), { mode: 'cors' });
+    if (!searchRes.ok) return { price: null, url: null, title: null };
+    const doc = new DOMParser().parseFromString(await searchRes.text(), 'text/html');
+    const seen = new Set();
+    const cands = [];
+    doc.querySelectorAll('a[href*="/pr/"][title]').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      const title = a.getAttribute('title') || '';
+      if (!href.startsWith('https://jp.iherb.com/pr/') || title.length < 10 || seen.has(href)) return;
+      seen.add(href);
+      cands.push({ href, title });
+    });
+    if (!cands.length) return { price: null, url: null, title: null };
 
-    // Step2: 製品ページから価格を取得
-    const prodRes = await fetch(prodUrl, { mode: 'cors' });
-    if (!prodRes.ok) return { price: null, url: prodUrl };
-    const prodHtml = await prodRes.text();
-    const priceM = prodHtml.match(/"price"\s*:\s*"([\d.]+)"/);
-    const price = priceM ? Math.round(parseFloat(priceM[1])) : null;
-    return { price, url: prodRes.url || prodUrl };
+    // Step2: 照合スコアリング
+    // ブランド一致(必須) + 期待する数字(2000IU/240粒等)の一致数で採点
+    const brandTokens = (brand || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 2);
+    const expectNums = (String(name || '').replace(/[,，]/g, '').match(/\d+/g) || []).filter(n => n.length >= 2);
+    let best = null, bestScore = -1;
+    cands.forEach((c, idx) => {
+      const hay = (c.title + ' ' + c.href).toLowerCase().replace(/[,，]/g, '');
+      const brandOk = brandTokens.length === 0 || brandTokens.every(w => hay.includes(w));
+      if (!brandOk) return;
+      let score = 0;
+      expectNums.forEach(n => { if (hay.includes(n)) score += 2; });
+      score -= idx * 0.1;  // 同点なら検索上位を優先
+      if (score > bestScore) { bestScore = score; best = c; }
+    });
+    // ブランド一致した候補がない、または数字が1つも合わない場合は不採用
+    if (!best || (expectNums.length > 0 && bestScore < 2)) return { price: null, url: null, title: null };
+
+    // Step3: 照合できた製品ページから価格を取得
+    const prodRes = await fetch(best.href, { mode: 'cors' });
+    if (!prodRes.ok) return { price: null, url: best.href, title: best.title };
+    const priceM = (await prodRes.text()).match(/"price"\s*:\s*"([\d.]+)"/);
+    return {
+      price: priceM ? Math.round(parseFloat(priceM[1])) : null,
+      url: prodRes.url || best.href,
+      title: best.title
+    };
   } catch(e) {
-    return { price: null, url: null };
+    return { price: null, url: null, title: null };
   }
 }
 
@@ -1229,10 +1257,12 @@ async function fetchRealPrices(prods) {
     const headerEl = document.getElementById(`header-price-${i}`);
     const headerBtn = document.getElementById(`header-btn-${i}`);
 
-    const { price: realPrice, url: realUrl } = await fetchIherbProductInfo(p.brand, p.full_name || p.name);
+    const { price: realPrice, url: realUrl, title: matchedTitle } = await fetchIherbProductInfo(p.brand, p.full_name || p.name);
     const price   = realPrice ?? (p.price_jpy ? Math.round(p.price_jpy) : null);
     const isReal  = realPrice !== null;
+    // 照合済みURLのみ製品ページへ。照合できなければ検索結果ページへ（別商品には飛ばさない）
     const href    = realUrl || productUrl(p);
+    const isDirect = !!realUrl;
 
     // 1回あたりの金額
     const servings   = p.servings_per_container;
@@ -1242,13 +1272,15 @@ async function fetchRealPrices(prods) {
     const perServText = perServing ? `¥${perServing.toLocaleString()} / 1回分` : '';
     const labelText   = isReal ? '✓ iHerb現在価格' : (p.price_jpy ? '※AI参考価格' : '価格不明');
     const labelColor  = isReal ? 'var(--green-dark)' : 'var(--text-sub)';
+    const btnText     = isDirect ? '🛒 iHerbで確認' : '🔍 iHerbで検索';
 
     if (cell) {
       cell.innerHTML = `
         <div class="price-big">${priceText}</div>
         ${perServText ? `<div class="price-per">${perServText}</div>` : ''}
         <div style="font-size:9px;color:${labelColor};margin-top:3px;font-weight:${isReal?'600':'400'};">${labelText}</div>
-        ${href ? `<a class="btn-iherb" href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="margin-top:6px;font-size:11px;padding:5px 12px;">🛒 iHerbで確認</a>` : ''}
+        ${matchedTitle ? `<div style="font-size:9px;color:var(--text-sub);margin-top:2px;line-height:1.4;">${esc(matchedTitle.slice(0, 40))}${matchedTitle.length > 40 ? '…' : ''}</div>` : ''}
+        ${href ? `<a class="btn-iherb" href="${esc(href)}" target="_blank" rel="noopener noreferrer" style="margin-top:6px;font-size:11px;padding:5px 12px;">${btnText}</a>` : ''}
       `;
     }
     if (headerEl) {
@@ -1256,19 +1288,16 @@ async function fetchRealPrices(prods) {
         ? `${priceText}${perServText ? `<div style="font-size:10px;color:var(--green-dark);font-weight:700;margin-top:1px;">${perServText}</div>` : ''}<div style="font-size:9px;opacity:0.7;font-weight:400;">${isReal ? '現在価格' : '参考'}</div>`
         : '';
     }
-    // ヘッダーの「iHerbで見る」ボタンのリンクも正しいURLに更新
-    if (headerBtn && href) headerBtn.href = href;
+    // ヘッダーの「iHerbで見る」ボタンも照合結果に合わせて更新
+    if (headerBtn && href) {
+      headerBtn.href = href;
+      headerBtn.textContent = isDirect ? '🛒 iHerbで見る' : '🔍 iHerbで検索';
+    }
   }));
 }
 
-// jp.iherb.com/pr/...のURLが有効なら使用、それ以外は検索URLにフォールバック
+// 検索URLを返す（AI生成の/pr/URLは数字IDがデタラメで別商品に飛ぶため使わない）
 function productUrl(p) {
-  if (p.product_url && typeof p.product_url === 'string') {
-    const u = p.product_url.trim();
-    if (u.startsWith('https://jp.iherb.com/pr/') || u.startsWith('https://www.iherb.com/pr/')) {
-      return u;
-    }
-  }
   const q = [p.brand, p.full_name || p.name].filter(Boolean).join(' ');
   if (!q.trim()) return null;
   return 'https://jp.iherb.com/search?kw=' + encodeURIComponent(q.trim());
